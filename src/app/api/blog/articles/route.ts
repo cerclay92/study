@@ -27,11 +27,11 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const categoryId = searchParams.get("categoryId") ? parseInt(searchParams.get("categoryId")!) : undefined;
-    const tagId = searchParams.get("tagId") ? parseInt(searchParams.get("tagId")!) : undefined;
-    const searchQuery = searchParams.get("searchQuery") || undefined;
-    
-    const supabase = createServerClient();
-    const offset = (page - 1) * limit;
+    const search = searchParams.get("search") || undefined;
+    const tag = searchParams.get("tag") || undefined;
+    const published = searchParams.get("published") === "true";
+
+    const supabase = await createServerClient();
 
     // 기본 쿼리 설정
     let query = supabase
@@ -40,35 +40,44 @@ export async function GET(request: NextRequest) {
         *,
         categories:category_id(*)
       `)
-      .eq("published", true)
-      .order("published_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order("created_at", { ascending: false });
 
-    // 카테고리 필터링
+    // 필터 적용
     if (categoryId) {
       query = query.eq("category_id", categoryId);
     }
 
-    // 검색어 필터링
-    if (searchQuery) {
-      query = query.or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`);
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
     }
 
-    const { data: articlesData, error } = await query;
+    if (tag) {
+      query = query.contains("tags", [tag]);
+    }
+
+    if (published !== undefined) {
+      query = query.eq("published", published);
+    }
+
+    // 페이지네이션 적용
+    const start = (page - 1) * limit;
+    const end = start + limit - 1;
+    query = query.range(start, end);
+
+    const { data, error } = await query;
 
     if (error) {
-      const apiError = handleApiError(error);
-      return NextResponse.json<ApiResponse>({ error: apiError }, { status: 500 });
+      throw error;
     }
 
     // 태그 필터링 및 정보 가져오기
-    let filteredArticles = articlesData;
+    let filteredArticles = data;
     
-    if (tagId) {
+    if (tag) {
       const { data: taggedArticles, error: tagError } = await supabase
         .from("article_tags")
         .select("article_id")
-        .eq("tag_id", tagId);
+        .eq("tag_id", tag);
 
       if (tagError) {
         const apiError = handleApiError(tagError);
@@ -77,7 +86,7 @@ export async function GET(request: NextRequest) {
 
       if (taggedArticles) {
         const articleIds = taggedArticles.map(item => item.article_id);
-        filteredArticles = articlesData.filter(article => 
+        filteredArticles = data.filter(article => 
           articleIds.includes(article.id)
         );
       }
@@ -115,11 +124,18 @@ export async function GET(request: NextRequest) {
       success: true
     });
   } catch (error) {
-    console.error("게시글 목록 가져오기 오류:", error);
-    const apiError = handleApiError(error);
-    return NextResponse.json<ApiResponse>({ 
-      error: apiError,
-      success: false 
-    }, { status: 500 });
+    console.error("서버 API 예외 발생:", error);
+    if (error instanceof Error) {
+      console.error("서버 API 예외 상세:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    );
   }
 } 

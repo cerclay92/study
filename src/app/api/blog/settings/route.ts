@@ -15,18 +15,14 @@ interface BlogSettings {
 // GET 요청 처리: 블로그 설정 가져오기
 export async function GET(_request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     const { data, error } = await supabase
       .from("blog_settings")
       .select("*");
 
     if (error) {
-      const apiError = handleApiError(error);
-      return NextResponse.json<ApiResponse>({ 
-        error: apiError,
-        success: false 
-      }, { status: 500 });
+      throw error;
     }
 
     return NextResponse.json<ApiResponse<BlogSettings[]>>({ 
@@ -34,11 +30,18 @@ export async function GET(_request: NextRequest) {
       success: true 
     });
   } catch (error) {
-    console.error("블로그 설정 가져오기 오류:", error);
-    const apiError = handleApiError(error);
-    return NextResponse.json<ApiResponse>({ 
-      error: apiError,
-      success: false 
-    }, { status: 500 });
+    console.error("서버 API 예외 발생:", error);
+    if (error instanceof Error) {
+      console.error("서버 API 예외 상세:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    );
   }
 } 

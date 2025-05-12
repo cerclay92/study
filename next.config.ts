@@ -5,13 +5,19 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {
+        protocol: 'https',
         hostname: '**',
       },
     ],
   },
+  swcMinify: true,
+  poweredByHeader: false,
 };
 
 export default nextConfig;

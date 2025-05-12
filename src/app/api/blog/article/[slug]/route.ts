@@ -32,7 +32,7 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     // 게시글 데이터 조회
     const { data, error } = await supabase
@@ -45,11 +45,7 @@ export async function GET(
       .single();
 
     if (error) {
-      const apiError = handleApiError(error);
-      return NextResponse.json<ApiResponse>({ 
-        error: apiError,
-        success: false 
-      }, { status: 404 });
+      throw error;
     }
 
     // 태그 정보 가져오기
@@ -76,11 +72,18 @@ export async function GET(
       success: true 
     });
   } catch (error) {
-    console.error("게시글 가져오기 오류:", error);
-    const apiError = handleApiError(error);
-    return NextResponse.json<ApiResponse>({ 
-      error: apiError,
-      success: false 
-    }, { status: 500 });
+    console.error("서버 API 예외 발생:", error);
+    if (error instanceof Error) {
+      console.error("서버 API 예외 상세:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    );
   }
 } 

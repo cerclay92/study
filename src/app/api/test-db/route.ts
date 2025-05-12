@@ -1,67 +1,47 @@
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient();
-    const results = { categories: null, articles: null, errors: [] };
-    
-    // 카테고리 데이터 가져오기
+    const supabase = await createServerClient();
+
     try {
       const { data: categories, error: categoriesError } = await supabase
         .from('categories')
         .select('*');
-      
-      results.categories = categories;
-      
+
       if (categoriesError) {
-        results.errors.push({
-          source: '카테고리 조회',
-          error: categoriesError,
-          message: categoriesError.message
+        throw categoriesError;
+      }
+
+      return NextResponse.json({ 
+        success: true,
+        data: categories
+      });
+    } catch (error) {
+      console.error("데이터베이스 쿼리 오류:", error);
+      if (error instanceof Error) {
+        console.error("데이터베이스 쿼리 오류 상세:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
         });
       }
-    } catch (e) {
-      results.errors.push({
-        source: '카테고리 조회 예외',
-        error: e
-      });
+      throw error;
     }
-    
-    // 게시글 데이터 가져오기
-    try {
-      const { data: articles, error: articlesError } = await supabase
-        .from('articles')
-        .select('*');
-      
-      results.articles = articles;
-      
-      if (articlesError) {
-        results.errors.push({
-          source: '게시글 조회',
-          error: articlesError,
-          message: articlesError.message
-        });
-      }
-    } catch (e) {
-      results.errors.push({
-        source: '게시글 조회 예외',
-        error: e
-      });
-    }
-    
-    return NextResponse.json({
-      ...results,
-      success: results.errors.length === 0,
-      message: results.errors.length === 0 
-        ? 'Supabase 데이터 조회 성공' 
-        : `조회 중 ${results.errors.length}개 오류 발생`
-    });
   } catch (error) {
-    console.error('API 실행 중 오류 발생:', error);
-    return NextResponse.json({ 
-      error: '서버 오류 발생', 
-      details: error 
-    }, { status: 500 });
+    console.error("서버 API 예외 발생:", error);
+    if (error instanceof Error) {
+      console.error("서버 API 예외 상세:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    );
   }
 } 
