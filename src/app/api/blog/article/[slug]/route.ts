@@ -1,13 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { ApiResponse, handleApiError } from "@/lib/types/error";
+
+interface RouteParams {
+  params: Promise<{ slug: string }>;
+}
+
+interface Article {
+  id: number;
+  title: string;
+  content: string;
+  slug: string;
+  published: boolean;
+  published_at: string | null;
+  category_id: number;
+  categories: {
+    id: number;
+    name: string;
+  };
+  tags?: Array<{
+    id: number;
+    name: string;
+  }>;
+  author_name: string;
+}
 
 // GET 요청 처리: 단일 게시글 가져오기
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: RouteParams
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const supabase = createServerClient();
     
     // 게시글 데이터 조회
@@ -21,33 +45,42 @@ export async function GET(
       .single();
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message }, 
-        { status: 404 }
-      );
+      const apiError = handleApiError(error);
+      return NextResponse.json<ApiResponse>({ 
+        error: apiError,
+        success: false 
+      }, { status: 404 });
     }
 
     // 태그 정보 가져오기
-    const { data: tagsData } = await supabase
+    const { data: tagsData, error: tagError } = await supabase
       .from("article_tags")
       .select("tags(*)")
       .eq("article_id", data.id);
 
+    if (tagError) {
+      console.error("태그 정보 조회 오류:", tagError);
+    }
+
     const tags = tagsData?.map(item => item.tags) || [];
 
     // 클라이언트에 전송할 최종 데이터
-    const article = {
+    const article: Article = {
       ...data,
       author_name: "관리자", // 간단한 임시 값
       tags
     };
 
-    return NextResponse.json({ data: article });
+    return NextResponse.json<ApiResponse<Article>>({ 
+      data: article,
+      success: true 
+    });
   } catch (error) {
     console.error("게시글 가져오기 오류:", error);
-    return NextResponse.json(
-      { error: "게시글을 가져오는 중 오류가 발생했습니다." }, 
-      { status: 500 }
-    );
+    const apiError = handleApiError(error);
+    return NextResponse.json<ApiResponse>({ 
+      error: apiError,
+      success: false 
+    }, { status: 500 });
   }
 } 

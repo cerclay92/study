@@ -210,7 +210,13 @@ export default function BlogWritePage() {
       if (error) throw error;
       
       if (data) {
-        const newTagObject = { id: data, name: newTag.trim() };
+        const newTagObject: Tag = {
+          id: data,
+          name: newTag.trim(),
+          description: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
         setAvailableTags(prev => [...prev, newTagObject]);
         setSelectedTags(prev => [...prev, data.toString()]);
         form.setValue("tags", [...(form.getValues("tags") || []), data.toString()]);
@@ -238,35 +244,27 @@ export default function BlogWritePage() {
   };
 
   // 대표 이미지 업로드
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setIsLoadingImage(true);
-    
+  const handleImageUpload = async (e: Event) => {
     try {
-      console.log("이미지 업로드 시작:", file.name);
-      const { data, error } = await uploadFile(file);
-      
-      if (error) {
-        console.error("이미지 업로드 오류:", error);
-        toast.error(error.message || "이미지 업로드에 실패했습니다");
-        return;
+      setIsLoadingImage(true);
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const result = await uploadFile(file);
+      if (result.error) {
+        throw result.error;
       }
-      
-      if (data) {
-        console.log("업로드 성공, URL:", data);
-        setImageUrl(data);
-        form.setValue("featured_image", data);
-        toast.success("이미지가 업로드되었습니다");
+      if (result.data) {
+        form.setValue("featured_image", result.data);
+        setImageUrl(result.data);
       }
     } catch (error) {
-      console.error("이미지 업로드 오류:", error);
-      toast.error("이미지 업로드 중 오류가 발생했습니다");
+      console.error("이미지 업로드 중 오류 발생:", error);
+      toast.error((error as Error).message || "이미지 업로드에 실패했습니다");
     } finally {
       setIsLoadingImage(false);
       if (e.target) {
-        e.target.value = "";
+        (e.target as HTMLInputElement).value = "";
       }
     }
   };
@@ -321,7 +319,7 @@ export default function BlogWritePage() {
       router.push("/admin/blog");
     } catch (error) {
       console.error("게시글 발행 오류:", error);
-      toast.error(`게시글 발행에 실패했습니다: ${error.message || "알 수 없는 오류가 발생했습니다"}`);
+      toast.error(`게시글 발행에 실패했습니다: ${(error as Error).message || "알 수 없는 오류가 발생했습니다"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -364,7 +362,7 @@ export default function BlogWritePage() {
     } catch (error) {
       console.error("임시저장 오류:", error);
       console.error("임시저장 오류 상세:", JSON.stringify(error));
-      toast.error(`임시저장에 실패했습니다: ${error.message || JSON.stringify(error)}`);
+      toast.error(`임시저장에 실패했습니다: ${(error as Error).message || JSON.stringify(error)}`);
     } finally {
       setIsSaving(false);
     }

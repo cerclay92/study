@@ -4,11 +4,15 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
+
 export default function ArticleEditRedirectPage({
   params,
-}: {
-  params: { id: string };
-}) {
+}: PageProps) {
   const router = useRouter();
   const { id } = params;
 

@@ -65,7 +65,11 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function EditArticlePage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function EditArticlePage({ params }: PageProps) {
   // Next.js 14+ params는 Promise이므로 React.use()로 언래핑
   const { id } = React.use(params);
   const router = useRouter();
@@ -262,12 +266,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
       } catch (error) {
         console.error("게시글 데이터 처리 중 예외 발생:", {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
+          name: (error as Error).name,
+          message: (error as Error).message,
+          stack: (error as Error).stack
         });
         toast.error("게시글 데이터를 처리하는 중 오류가 발생했습니다");
-      } finally {
         setIsLoading(false);
       }
     };
@@ -342,7 +345,13 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
       if (error) throw error;
       
       if (data) {
-        const newTagObject = { id: data, name: newTag.trim() };
+        const newTagObject: Tag = {
+          id: data,
+          name: newTag.trim(),
+          description: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
         setAvailableTags(prev => [...prev, newTagObject]);
         setSelectedTags(prev => [...prev, data.toString()]);
         form.setValue("tags", [...(form.getValues("tags") || []), data.toString()]);
@@ -371,48 +380,26 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
   // 대표 이미지 업로드
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setIsLoadingImage(true);
-    
     try {
-      console.log("이미지 업로드 시작:", {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type
-      });
+      setIsLoadingImage(true);
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-      // 파일 크기 체크 (10MB 제한)
-      if (file.size > 10 * 1024 * 1024) {
-        throw new Error("파일 크기는 10MB를 초과할 수 없습니다.");
+      const result = await uploadFile(file);
+      if (result.error) {
+        throw result.error;
       }
-
-      // 이미지 타입 체크
-      if (!file.type.startsWith("image/")) {
-        throw new Error("이미지 파일만 업로드할 수 있습니다.");
-      }
-
-      const { data, error } = await uploadFile(file);
-      
-      if (error) {
-        console.error("이미지 업로드 API 오류:", error);
-        throw error;
-      }
-      
-      if (data) {
-        console.log("이미지 업로드 성공:", data);
-        setImageUrl(data);
-        form.setValue("featured_image", data);
-        toast.success("이미지가 업로드되었습니다");
+      if (result.data) {
+        form.setValue("featured_image", result.data);
+        setImageUrl(result.data);
       }
     } catch (error) {
       console.error("이미지 업로드 중 오류 발생:", error);
-      toast.error(error.message || "이미지 업로드에 실패했습니다");
+      toast.error((error as Error).message || "이미지 업로드에 실패했습니다");
     } finally {
       setIsLoadingImage(false);
       if (e.target) {
-        e.target.value = ""; // 파일 입력 초기화
+        (e.target as HTMLInputElement).value = "";
       }
     }
   };
@@ -462,7 +449,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     } catch (error) {
       console.error("게시글 업데이트 오류:", error);
       console.error("오류 상세 정보:", JSON.stringify(error));
-      toast.error(`게시글 업데이트에 실패했습니다: ${error.message || JSON.stringify(error)}`);
+      toast.error(`게시글 업데이트에 실패했습니다: ${(error as Error).message || JSON.stringify(error)}`);
     } finally {
       setIsSubmitting(false);
     }

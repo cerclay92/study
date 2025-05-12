@@ -448,10 +448,13 @@ export default function BlogAdminPage() {
             <Pagination className="my-4">
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious
+                  <Button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                  />
+                    variant="ghost"
+                  >
+                    <PaginationPrevious />
+                  </Button>
                 </PaginationItem>
                 {[...Array(totalPages)].map((_, i) => (
                   <PaginationItem key={i + 1}>
@@ -464,10 +467,13 @@ export default function BlogAdminPage() {
                   </PaginationItem>
                 ))}
                 <PaginationItem>
-                  <PaginationNext
+                  <Button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                  />
+                    variant="ghost"
+                  >
+                    <PaginationNext />
+                  </Button>
                 </PaginationItem>
               </PaginationContent>
             </Pagination>

@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { ApiResponse, handleApiError } from "@/lib/types/error";
+
+interface BlogSettings {
+  id: number;
+  site_title: string;
+  site_description: string;
+  site_keywords: string[];
+  posts_per_page: number;
+  created_at: string;
+  updated_at: string;
+}
 
 // GET 요청 처리: 블로그 설정 가져오기
 export async function GET(_request: NextRequest) {
@@ -11,18 +22,23 @@ export async function GET(_request: NextRequest) {
       .select("*");
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message }, 
-        { status: 500 }
-      );
+      const apiError = handleApiError(error);
+      return NextResponse.json<ApiResponse>({ 
+        error: apiError,
+        success: false 
+      }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json<ApiResponse<BlogSettings[]>>({ 
+      data,
+      success: true 
+    });
   } catch (error) {
     console.error("블로그 설정 가져오기 오류:", error);
-    return NextResponse.json(
-      { error: "블로그 설정을 가져오는 중 오류가 발생했습니다." }, 
-      { status: 500 }
-    );
+    const apiError = handleApiError(error);
+    return NextResponse.json<ApiResponse>({ 
+      error: apiError,
+      success: false 
+    }, { status: 500 });
   }
 } 

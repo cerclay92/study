@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { ApiResponse, handleApiError } from "@/lib/types/error";
+
+interface Article {
+  id: number;
+  title: string;
+  content: string;
+  published: boolean;
+  published_at: string | null;
+  category_id: number;
+  categories: {
+    id: number;
+    name: string;
+  };
+  tags?: Array<{
+    id: number;
+    name: string;
+  }>;
+  author_name: string;
+}
 
 // GET 요청 처리: 게시글 목록 가져오기
 export async function GET(request: NextRequest) {
@@ -38,20 +57,23 @@ export async function GET(request: NextRequest) {
     const { data: articlesData, error } = await query;
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message }, 
-        { status: 500 }
-      );
+      const apiError = handleApiError(error);
+      return NextResponse.json<ApiResponse>({ error: apiError }, { status: 500 });
     }
 
     // 태그 필터링 및 정보 가져오기
     let filteredArticles = articlesData;
     
     if (tagId) {
-      const { data: taggedArticles } = await supabase
+      const { data: taggedArticles, error: tagError } = await supabase
         .from("article_tags")
         .select("article_id")
         .eq("tag_id", tagId);
+
+      if (tagError) {
+        const apiError = handleApiError(tagError);
+        return NextResponse.json<ApiResponse>({ error: apiError }, { status: 500 });
+      }
 
       if (taggedArticles) {
         const articleIds = taggedArticles.map(item => item.article_id);
@@ -64,10 +86,19 @@ export async function GET(request: NextRequest) {
     // 각 게시글의 태그 정보 가져오기
     const articles = await Promise.all(
       filteredArticles.map(async article => {
-        const { data: tagsData } = await supabase
+        const { data: tagsData, error: tagError } = await supabase
           .from("article_tags")
           .select("tags(*)")
           .eq("article_id", article.id);
+
+        if (tagError) {
+          console.error("태그 정보 조회 오류:", tagError);
+          return {
+            ...article,
+            author_name: "관리자",
+            tags: []
+          };
+        }
 
         const tags = tagsData?.map(item => item.tags) || [];
         
@@ -79,12 +110,16 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({ data: articles });
+    return NextResponse.json<ApiResponse<Article[]>>({ 
+      data: articles,
+      success: true
+    });
   } catch (error) {
     console.error("게시글 목록 가져오기 오류:", error);
-    return NextResponse.json(
-      { error: "게시글 목록을 가져오는 중 오류가 발생했습니다." }, 
-      { status: 500 }
-    );
+    const apiError = handleApiError(error);
+    return NextResponse.json<ApiResponse>({ 
+      error: apiError,
+      success: false 
+    }, { status: 500 });
   }
 } 

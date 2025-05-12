@@ -97,9 +97,7 @@ interface PageProps {
 }
 
 export default function CategoryPage({ params }: PageProps) {
-  // React.use()로 params 언래핑
-  const unwrappedParams = use(params);
-  const { slug } = unwrappedParams;
+  const { slug } = params;
   
   // 카테고리 정보 찾기
   const category = CATEGORIES.find((cat) => cat.slug === slug);

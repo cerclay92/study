@@ -8,17 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CATEGORIES } from "@/constants/theme";
-
-export const metadata: Metadata = {
-  title: "블로그 - 서재, 사람을 잇다",
-  description: "서재, 사람을 잇다의 블로그 페이지입니다.",
-};
 
 // 서버 액션 타입
 type Category = {
