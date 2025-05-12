@@ -157,7 +157,6 @@ export default async function Home() {
           <VideoBackground 
             videoSrc="https://fntiuopyonutxkeeipsc.supabase.co/storage/v1/object/public/video//hero.mp4"
             fallbackImageSrc="https://picsum.photos/id/25/1920/1080"
-            overlayOpacity={60}
           />
           
           {/* 장식 요소 */}
@@ -193,20 +192,20 @@ export default async function Home() {
         </section>
 
         {/* 카테고리 소개 */}
-        <section className="py-12 sm:py-14 md:py-16">
+        <section className="py-8 sm:py-10 md:py-12 lg:py-16">
           <div className="container px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {CATEGORIES.map((category) => (
                 <Link 
                   key={category.id} 
                   href={`/blog/category/${category.slug}`}
-                  className="group flex flex-col items-center justify-center bg-white dark:bg-secondary/20 rounded-xl p-4 sm:p-5 md:p-6 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-xl overflow-hidden relative"
+                  className="group flex flex-col items-center justify-center bg-white dark:bg-secondary/20 rounded-xl p-3 sm:p-4 md:p-5 lg:p-6 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-xl overflow-hidden relative"
                 >
                   <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-primary text-white flex items-center justify-center mb-3 md:mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full bg-primary text-white flex items-center justify-center mb-2 sm:mb-3 md:mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
                     {categoryIcons[category.name]}
                   </div>
-                  <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground group-hover:text-primary transition-colors">{category.name}</h3>
+                  <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-foreground group-hover:text-primary transition-colors text-center">{category.name}</h3>
                 </Link>
               ))}
             </div>
@@ -214,28 +213,26 @@ export default async function Home() {
         </section>
 
         {/* 추천 게시글 */}
-        <section className="py-12 sm:py-14 md:py-16 bg-secondary/10">
+        <section className="py-8 sm:py-10 md:py-12 lg:py-16 bg-secondary/10">
           <div className="container px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-8">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-3 sm:mb-0">
                 <span className="border-b-[3px] border-primary pb-1">인기 글</span>
               </h2>
               <Link 
                 href="/blog" 
-                className="text-primary flex items-center gap-2 font-medium hover:underline group text-sm sm:text-base"
+                className="text-primary flex items-center gap-1 sm:gap-2 font-medium hover:underline group text-sm sm:text-base"
               >
                 전체보기 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
               {featuredWithFallback?.map((post) => {
-                // 카테고리 이름 가져오기 (DB와 상수 맵 활용)
                 let categoryName = "미분류";
                 if (post.category_id && categoryData[post.category_id]) {
                   categoryName = categoryData[post.category_id].name;
                 } else {
-                  // 상수에서 찾기 시도
                   const constCategory = CATEGORIES.find(c => c.id === post.category_id);
                   if (constCategory) {
                     categoryName = constCategory.name;
@@ -244,7 +241,7 @@ export default async function Home() {
                 
                 return (
                   <Card key={post.id} className="overflow-hidden h-full flex flex-col border-none shadow-md hover:shadow-lg transition-all duration-300 group">
-                    <div className="relative h-48 sm:h-52 md:h-56 overflow-hidden">
+                    <div className="relative h-40 sm:h-44 md:h-48 lg:h-52 overflow-hidden">
                       <Image
                         src={post.featured_image || "https://picsum.photos/id/24/800/600"}
                         alt={post.title}
@@ -252,21 +249,21 @@ export default async function Home() {
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-3 left-3 bg-primary text-white py-1 px-2 sm:px-3 text-xs rounded-sm font-medium shadow-sm">
+                      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-primary text-white py-1 px-2 text-xs sm:text-sm rounded-sm font-medium shadow-sm">
                         {categoryName}
                       </div>
                     </div>
-                    <CardHeader className="flex-grow p-4 sm:p-5 md:p-6">
-                      <CardTitle className="text-base sm:text-lg md:text-xl line-clamp-2 group-hover:text-primary transition-colors">
+                    <CardHeader className="flex-grow p-3 sm:p-4 md:p-5 lg:p-6">
+                      <CardTitle className="text-sm sm:text-base md:text-lg lg:text-xl line-clamp-2 group-hover:text-primary transition-colors">
                         <Link href={`/article/${post.slug}`}>{post.title}</Link>
                       </CardTitle>
-                      <CardDescription className="line-clamp-3 mt-2 sm:mt-3 text-sm sm:text-base">
+                      <CardDescription className="line-clamp-3 mt-2 sm:mt-3 text-xs sm:text-sm md:text-base">
                         {post.excerpt || post.title}
                       </CardDescription>
                     </CardHeader>
-                    <CardFooter className="pt-0 px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6">
+                    <CardFooter className="pt-0 px-3 sm:px-4 md:px-5 lg:px-6 pb-3 sm:pb-4 md:pb-5 lg:pb-6">
                       <Button asChild variant="link" className="p-0 font-medium text-primary">
-                        <Link href={`/article/${post.slug}`} className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base group-hover:underline">
+                        <Link href={`/article/${post.slug}`} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base group-hover:underline">
                           더 읽기 <ArrowRight className="ml-1 w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                       </Button>
@@ -279,28 +276,26 @@ export default async function Home() {
         </section>
 
         {/* 최신 게시글 */}
-        <section className="py-12 sm:py-14 md:py-16">
+        <section className="py-8 sm:py-10 md:py-12 lg:py-16">
           <div className="container px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-8">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-3 sm:mb-0">
                 <span className="border-b-[3px] border-primary pb-1">최신 글</span>
               </h2>
               <Link 
                 href="/blog" 
-                className="text-primary flex items-center gap-2 font-medium hover:underline group text-sm sm:text-base"
+                className="text-primary flex items-center gap-1 sm:gap-2 font-medium hover:underline group text-xs sm:text-sm md:text-base"
               >
                 전체보기 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
               {recentPosts?.map((post) => {
-                // 카테고리 이름 가져오기 (DB와 상수 맵 활용)
                 let categoryName = "미분류";
                 if (post.category_id && categoryData[post.category_id]) {
                   categoryName = categoryData[post.category_id].name;
                 } else {
-                  // 상수에서 찾기 시도
                   const constCategory = CATEGORIES.find(c => c.id === post.category_id);
                   if (constCategory) {
                     categoryName = constCategory.name;
@@ -309,7 +304,7 @@ export default async function Home() {
                 
                 return (
                   <Card key={post.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 group">
-                    <div className="relative h-40 overflow-hidden">
+                    <div className="relative h-32 sm:h-36 md:h-38 lg:h-40 overflow-hidden">
                       <Image
                         src={post.featured_image || "https://picsum.photos/id/24/400/300"}
                         alt={post.title}
@@ -321,11 +316,11 @@ export default async function Home() {
                         {categoryName}
                       </div>
                     </div>
-                    <CardHeader className="p-3 sm:p-4">
-                      <CardTitle className="text-sm sm:text-base line-clamp-2 group-hover:text-primary transition-colors">
+                    <CardHeader className="p-2 sm:p-3 md:p-4">
+                      <CardTitle className="text-xs sm:text-sm md:text-base line-clamp-2 group-hover:text-primary transition-colors">
                         <Link href={`/article/${post.slug}`}>{post.title}</Link>
                       </CardTitle>
-                      <CardDescription className="text-xs sm:text-sm mt-1">
+                      <CardDescription className="text-xs sm:text-sm mt-1 sm:mt-2">
                         {formatDate(new Date(post.published_at || post.created_at))}
                       </CardDescription>
                     </CardHeader>
