@@ -82,7 +82,7 @@ export function CommentSection({ articleId }: CommentSectionProps) {
       
       const { error } = await createComment({
         article_id: articleId,
-        name: data.name,
+        author_name: data.name,
         content: data.content,
       });
       
@@ -184,7 +184,7 @@ export function CommentSection({ articleId }: CommentSectionProps) {
             comments.map((comment) => (
               <div key={comment.id} className="border-b pb-4 last:border-b-0 last:pb-0">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{comment.name}</h4>
+                  <h4 className="font-medium">{comment.author_name}</h4>
                   <span className="text-sm text-muted-foreground">
                     {comment.created_at && formatDate(new Date(comment.created_at))}
                   </span>

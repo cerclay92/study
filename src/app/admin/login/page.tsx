@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { BookOpen } from "lucide-react";
 import { SERVICE_NAME } from "@/constants/theme";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 export default function AdminLoginPage() {

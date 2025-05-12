@@ -1,31 +1,24 @@
-import React from "react";
-import { createServerClient } from "@/lib/supabase/server";
-import { Metadata } from "next";
+"use client";
+
+import React, { ReactElement } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, FileText, BookOpen, Palette, MessageCircle, Mic } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FileText, BookOpen, Palette, Lightbulb, Newspaper, Shapes } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import PageLayout from "@/components/PageLayout";
-import { SERVICE_NAME, CATEGORIES } from "@/constants/theme";
-import VideoBackground from "@/components/VideoBackground";
-import { formatDate } from "@/lib/utils";
+import { CATEGORIES } from "@/constants/theme";
 import ClientHome from "@/features/home/components/ClientHome";
 
-export const metadata: Metadata = {
-  title: "서재, 사람을 잇다",
-  description: "서재, 사람을 잇다에 오신 것을 환영합니다.",
-};
-
 // 카테고리별 아이콘 매핑
-const categoryIcons: Record<string, JSX.Element> = {
+const categoryIcons: Record<string, ReactElement> = {
   "에세이": <FileText className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 에세이
   "인문학": <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 인문학
   "문화": <Palette className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 문화
-  "상담 사례": <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 상담 사례
-  "인터뷰": <Mic className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 인터뷰
+  "과학": <Lightbulb className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 과학
+  "시사": <Newspaper className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 시사
+  "기타": <Shapes className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 기타
 };
 
+<<<<<<< HEAD
 export default async function Home() {
   // Supabase 클라이언트 생성
   const supabase = createServerClient();
@@ -353,4 +346,8 @@ export default async function Home() {
       </PageLayout>
     );
   }
+=======
+export default function HomePage() {
+  return <ClientHome categoryIcons={categoryIcons} />;
+>>>>>>> e93acc1ca4550f1cf3f40f87f92b385f82480fc0
 }

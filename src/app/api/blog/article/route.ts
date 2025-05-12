@@ -156,13 +156,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id: data.id });
   } catch (error) {
     console.error("서버 API 예외 발생:", error);
-    console.error("서버 API 예외 상세:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
+    if (error instanceof Error) {
+      console.error("서버 API 예외 상세:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
     return NextResponse.json(
-      { error: error.message || "Internal Server Error" },
+      { error: "서버 오류가 발생했습니다." },
       { status: 500 }
     );
   }

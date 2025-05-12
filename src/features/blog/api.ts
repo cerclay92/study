@@ -129,12 +129,14 @@ export async function createArticle(
     return { data: result.id, error: null };
   } catch (error) {
     console.error("createArticle 함수 예외 발생:", error);
-    console.error("createArticle 함수 예외 상세:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
-    return { data: null, error: error as Error };
+    if (error instanceof Error) {
+      console.error("createArticle 함수 예외 상세:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    throw error;
   }
 }
 
