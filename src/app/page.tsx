@@ -1,168 +1,361 @@
-'use client';
-
+import React from "react";
+import { createServerClient } from "@/lib/supabase/server";
+import { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight, FileText, BookOpen, Palette, MessageCircle, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Github, Copy, Sparkles } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import PageLayout from "@/components/PageLayout";
+import { SERVICE_NAME, CATEGORIES } from "@/constants/theme";
+import VideoBackground from "@/components/VideoBackground";
+import { formatDate } from "@/lib/utils";
+import ClientHome from "@/features/home/components/ClientHome";
 
-const PACKAGE_NAME = '@easynext/cli';
-const CURRENT_VERSION = 'v0.1.35';
+export const metadata: Metadata = {
+  title: "서재, 사람을 잇다",
+  description: "서재, 사람을 잇다에 오신 것을 환영합니다.",
+};
 
-function latestVersion(packageName: string) {
-  return axios
-    .get('https://registry.npmjs.org/' + packageName + '/latest')
-    .then((res) => res.data.version);
-}
+// 카테고리별 아이콘 매핑
+const categoryIcons: Record<string, JSX.Element> = {
+  "에세이": <FileText className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 에세이
+  "인문학": <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 인문학
+  "문화": <Palette className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 문화
+  "상담 사례": <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 상담 사례
+  "인터뷰": <Mic className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10" />, // 인터뷰
+};
 
-export default function Home() {
-  const { toast } = useToast();
-  const [latest, setLatest] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchLatestVersion = async () => {
-      try {
-        const version = await latestVersion(PACKAGE_NAME);
-        setLatest(`v${version}`);
-      } catch (error) {
-        console.error('Failed to fetch version info:', error);
+export default async function Home() {
+  // Supabase 클라이언트 생성
+  const supabase = createServerClient();
+  
+  // 데이터를 담을 변수 초기화
+  let dbCategories = [];
+  let featuredWithFallback = [];
+  let recentPosts = [];
+  
+  try {
+    // 인기 게시글 가져오기 (조회수 기준)
+    try {
+      const { data: featuredPosts, error: featuredError } = await supabase
+        .from("articles")
+        .select(`
+          id,
+          title,
+          slug,
+          excerpt,
+          featured_image,
+          published_at,
+          created_at,
+          category_id,
+          views,
+          published
+        `)
+        .limit(3);
+      
+      if (featuredError) {
+        console.error("인기 게시글 조회 오류:", featuredError);
+        console.error("오류 세부정보:", JSON.stringify(featuredError));
+      } else {
+        featuredWithFallback = featuredPosts || [];
+        console.log("가져온 인기 게시글:", featuredWithFallback);
       }
-    };
-    fetchLatestVersion();
-  }, []);
-
-  const handleCopyCommand = () => {
-    navigator.clipboard.writeText(`npm install -g ${PACKAGE_NAME}@latest`);
-    toast({
-      description: 'Update command copied to clipboard',
-    });
-  };
-
-  const needsUpdate = latest && latest !== CURRENT_VERSION;
-
-  return (
-    <div className="flex min-h-screen relative overflow-hidden">
-      {/* Main Content */}
-      <div className="min-h-screen flex bg-gray-100">
-        <div className="flex flex-col p-5 md:p-8 space-y-4">
-          <h1 className="text-3xl md:text-5xl font-semibold tracking-tighter !leading-tight text-left">
-            Easiest way to start
-            <br /> Next.js project
-            <br /> with Cursor
-          </h1>
-
-          <p className="text-lg text-muted-foreground">
-            Get Pro-created Next.js bootstrap just in seconds
-          </p>
-
-          <div className="flex items-center gap-2">
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="gap-2 w-fit rounded-full px-4 py-2 border border-black"
-            >
-              <a href="https://github.com/easynextjs/easynext" target="_blank">
-                <Github className="w-4 h-4" />
-                GitHub
-              </a>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="gap-2 w-fit rounded-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white"
-            >
-              <a href="https://easynext.org/premium" target="_blank">
-                <Sparkles className="w-4 h-4" />
-                Premium
-              </a>
-            </Button>
+      
+      // 인기 글이 없으면 최신 글 가져오기
+      if (featuredWithFallback.length === 0) {
+        try {
+          const { data: fallbackPosts, error: fallbackError } = await supabase
+            .from("articles")
+            .select(`
+              id,
+              title, 
+              slug,
+              excerpt,
+              featured_image,
+              published_at,
+              created_at,
+              category_id,
+              views,
+              published
+            `)
+            .limit(3);
+          
+          if (fallbackError) {
+            console.error("대체 게시글 조회 오류:", fallbackError);
+            console.error("오류 세부정보:", JSON.stringify(fallbackError));
+          } else {
+            featuredWithFallback = fallbackPosts || [];
+            console.log("가져온 대체 게시글:", featuredWithFallback);
+          }
+        } catch (err) {
+          console.error("대체 게시글 조회 중 예외 발생:", err);
+        }
+      }
+    } catch (err) {
+      console.error("인기 게시글 조회 중 예외 발생:", err);
+    }
+    
+    // 모든 게시글에 대한 카테고리 정보 로드
+    let categoryData = {};
+    try {
+      const { data: allCategories, error: categoriesError } = await supabase
+        .from("categories")
+        .select("id, name");
+      
+      if (categoriesError) {
+        console.error("카테고리 정보 로드 오류:", categoriesError);
+      } else if (allCategories) {
+        // 카테고리 ID를 키로 하는 맵 생성
+        allCategories.forEach(cat => {
+          categoryData[cat.id] = cat;
+        });
+        console.log("카테고리 데이터 맵:", categoryData);
+      }
+    } catch (err) {
+      console.error("카테고리 정보 로드 중 예외 발생:", err);
+    }
+    
+    // 최신 게시글 가져오기
+    try {
+      const { data: recentPostsData, error: recentError } = await supabase
+        .from("articles")
+        .select(`
+          id,
+          title,
+          slug,
+          excerpt,
+          featured_image,
+          published_at,
+          created_at,
+          category_id,
+          published
+        `)
+        .limit(4);
+      
+      if (recentError) {
+        console.error("최신 게시글 조회 오류:", recentError);
+        console.error("오류 세부정보:", JSON.stringify(recentError));
+      } else {
+        recentPosts = recentPostsData || [];
+        console.log("가져온 최신 게시글:", recentPosts);
+      }
+    } catch (err) {
+      console.error("최신 게시글 조회 중 예외 발생:", err);
+    }
+    
+    // 디버깅을 위해 콘솔에 데이터 출력
+    console.log("Fetched featuredWithFallback:", featuredWithFallback);
+    console.log("Fetched recentPosts:", recentPosts);
+  
+    // 렌더링 부분
+    return (
+      <PageLayout>
+        {/* 히어로 섹션 */}
+        <section className="relative py-16 sm:py-20 md:py-28 lg:py-32 overflow-hidden">
+          {/* 배경 비디오 */}
+          <VideoBackground 
+            videoSrc="https://fntiuopyonutxkeeipsc.supabase.co/storage/v1/object/public/video//hero.mp4"
+            fallbackImageSrc="https://picsum.photos/id/25/1920/1080"
+            overlayOpacity={60}
+          />
+          
+          {/* 장식 요소 */}
+          <div className="absolute top-0 left-0 w-full h-full opacity-20 z-10">
+            <div className="absolute top-10 left-10 w-20 md:w-40 h-20 md:h-40 rounded-full bg-primary/20 blur-3xl"></div>
+            <div className="absolute bottom-10 right-10 w-40 md:w-60 h-40 md:h-60 rounded-full bg-accent/10 blur-3xl"></div>
           </div>
-          <Section />
-        </div>
-      </div>
-
-      <div className="min-h-screen ml-16 flex-1 flex flex-col items-center justify-center space-y-4">
-        <div className="flex flex-col items-center space-y-2">
-          <p className="text-muted-foreground">
-            Current Version: {CURRENT_VERSION}
-          </p>
-          <p className="text-muted-foreground">
-            Latest Version:{' '}
-            <span className="font-bold">{latest || 'Loading...'}</span>
-          </p>
-        </div>
-
-        {needsUpdate && (
-          <div className="flex flex-col items-center space-y-2">
-            <p className="text-yellow-600">New version available!</p>
-            <p className="text-sm text-muted-foreground">
-              Copy and run the command below to update:
-            </p>
-            <div className="relative group">
-              <pre className="bg-gray-100 p-4 rounded-lg">
-                npm install -g {PACKAGE_NAME}@latest
-              </pre>
-              <button
-                onClick={handleCopyCommand}
-                className="absolute top-2 right-2 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
+          
+          <div className="container relative z-20">
+            <div className="max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 sm:mb-6 md:mb-8 tracking-tight animate-fade-up animate-once animate-duration-700 animate-delay-100">
+                <span className="text-primary">{SERVICE_NAME}</span>
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-white drop-shadow-lg font-semibold mb-6 sm:mb-8 md:mb-10 leading-relaxed animate-fade-up animate-once animate-duration-700 animate-delay-200">
+                깊이 있는 생각, 연결되는 사람들.<br />
+                당신의 이야기가 시작되는 곳.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up animate-once animate-duration-700 animate-delay-300">
+                <Button asChild size="lg" className="rounded-sm bg-primary hover:bg-primary/90 px-6 sm:px-8 py-5 sm:py-6 text-base shadow-md font-medium">
+                  <Link href="/subscribe">구독하기</Link>
+                </Button>
+                <Button 
+                  asChild 
+                  size="lg" 
+                  variant="outline" 
+                  className="rounded-sm border-gray-300 text-gray-700 px-6 sm:px-8 py-5 sm:py-6 text-base transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary"
+                >
+                  <Link href="/about">서비스 소개</Link>
+                </Button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        </section>
 
-function Section() {
-  const items = [
-    { href: 'https://nextjs.org/', label: 'Next.js' },
-    { href: 'https://ui.shadcn.com/', label: 'shadcn/ui' },
-    { href: 'https://tailwindcss.com/', label: 'Tailwind CSS' },
-    { href: 'https://www.framer.com/motion/', label: 'framer-motion' },
-    { href: 'https://zod.dev/', label: 'zod' },
-    { href: 'https://date-fns.org/', label: 'date-fns' },
-    { href: 'https://ts-pattern.dev/', label: 'ts-pattern' },
-    { href: 'https://es-toolkit.dev/', label: 'es-toolkit' },
-    { href: 'https://zustand.docs.pmnd.rs/', label: 'zustand' },
-    { href: 'https://supabase.com/', label: 'supabase' },
-    { href: 'https://react-hook-form.com/', label: 'react-hook-form' },
-  ];
+        {/* 카테고리 소개 */}
+        <section className="py-12 sm:py-14 md:py-16">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+              {CATEGORIES.map((category) => (
+                <Link 
+                  key={category.id} 
+                  href={`/blog/category/${category.slug}`}
+                  className="group flex flex-col items-center justify-center bg-white dark:bg-secondary/20 rounded-xl p-4 sm:p-5 md:p-6 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-xl overflow-hidden relative"
+                >
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-primary text-white flex items-center justify-center mb-3 md:mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    {categoryIcons[category.name]}
+                  </div>
+                  <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground group-hover:text-primary transition-colors">{category.name}</h3>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
 
-  return (
-    <div className="flex flex-col py-5 md:py-8 space-y-2 opacity-75">
-      <p className="font-semibold">What&apos;s Included</p>
+        {/* 추천 게시글 */}
+        <section className="py-12 sm:py-14 md:py-16 bg-secondary/10">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-0">
+                <span className="border-b-[3px] border-primary pb-1">인기 글</span>
+              </h2>
+              <Link 
+                href="/blog" 
+                className="text-primary flex items-center gap-2 font-medium hover:underline group text-sm sm:text-base"
+              >
+                전체보기 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
 
-      <div className="flex flex-col space-y-1 text-muted-foreground">
-        {items.map((item) => (
-          <SectionItem key={item.href} href={item.href}>
-            {item.label}
-          </SectionItem>
-        ))}
-      </div>
-    </div>
-  );
-}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+              {featuredWithFallback?.map((post) => {
+                // 카테고리 이름 가져오기 (DB와 상수 맵 활용)
+                let categoryName = "미분류";
+                if (post.category_id && categoryData[post.category_id]) {
+                  categoryName = categoryData[post.category_id].name;
+                } else {
+                  // 상수에서 찾기 시도
+                  const constCategory = CATEGORIES.find(c => c.id === post.category_id);
+                  if (constCategory) {
+                    categoryName = constCategory.name;
+                  }
+                }
+                
+                return (
+                  <Card key={post.id} className="overflow-hidden h-full flex flex-col border-none shadow-md hover:shadow-lg transition-all duration-300 group">
+                    <div className="relative h-48 sm:h-52 md:h-56 overflow-hidden">
+                      <Image
+                        src={post.featured_image || "https://picsum.photos/id/24/800/600"}
+                        alt={post.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 bg-primary text-white py-1 px-2 sm:px-3 text-xs rounded-sm font-medium shadow-sm">
+                        {categoryName}
+                      </div>
+                    </div>
+                    <CardHeader className="flex-grow p-4 sm:p-5 md:p-6">
+                      <CardTitle className="text-base sm:text-lg md:text-xl line-clamp-2 group-hover:text-primary transition-colors">
+                        <Link href={`/article/${post.slug}`}>{post.title}</Link>
+                      </CardTitle>
+                      <CardDescription className="line-clamp-3 mt-2 sm:mt-3 text-sm sm:text-base">
+                        {post.excerpt || post.title}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardFooter className="pt-0 px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6">
+                      <Button asChild variant="link" className="p-0 font-medium text-primary">
+                        <Link href={`/article/${post.slug}`} className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base group-hover:underline">
+                          더 읽기 <ArrowRight className="ml-1 w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
-function SectionItem({
-  children,
-  href,
-}: {
-  children: React.ReactNode;
-  href: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="flex items-center gap-2 underline"
-      target="_blank"
-    >
-      <CheckCircle className="w-4 h-4" />
-      <p>{children}</p>
-    </a>
-  );
+        {/* 최신 게시글 */}
+        <section className="py-12 sm:py-14 md:py-16">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-0">
+                <span className="border-b-[3px] border-primary pb-1">최신 글</span>
+              </h2>
+              <Link 
+                href="/blog" 
+                className="text-primary flex items-center gap-2 font-medium hover:underline group text-sm sm:text-base"
+              >
+                전체보기 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {recentPosts?.map((post) => {
+                // 카테고리 이름 가져오기 (DB와 상수 맵 활용)
+                let categoryName = "미분류";
+                if (post.category_id && categoryData[post.category_id]) {
+                  categoryName = categoryData[post.category_id].name;
+                } else {
+                  // 상수에서 찾기 시도
+                  const constCategory = CATEGORIES.find(c => c.id === post.category_id);
+                  if (constCategory) {
+                    categoryName = constCategory.name;
+                  }
+                }
+                
+                return (
+                  <Card key={post.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 group">
+                    <div className="relative h-40 overflow-hidden">
+                      <Image
+                        src={post.featured_image || "https://picsum.photos/id/24/400/300"}
+                        alt={post.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-2 left-2 bg-primary text-white py-1 px-2 text-xs rounded-sm font-medium shadow-sm">
+                        {categoryName}
+                      </div>
+                    </div>
+                    <CardHeader className="p-3 sm:p-4">
+                      <CardTitle className="text-sm sm:text-base line-clamp-2 group-hover:text-primary transition-colors">
+                        <Link href={`/article/${post.slug}`}>{post.title}</Link>
+                      </CardTitle>
+                      <CardDescription className="text-xs sm:text-sm mt-1">
+                        {formatDate(new Date(post.published_at || post.created_at))}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* 클라이언트 컴포넌트로 분리한 부분 */}
+        <ClientHome />
+      </PageLayout>
+    );
+  } catch (error) {
+    console.error("홈페이지 로딩 중 오류 발생:", error);
+    
+    // 오류가 발생해도 최소한의 UI는 표시
+    return (
+      <PageLayout>
+        <div className="container py-20 text-center">
+          <h1 className="text-3xl font-bold mb-6">{SERVICE_NAME}</h1>
+          <p className="text-muted-foreground mb-8">
+            데이터를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+          <Button asChild className="mx-auto">
+            <Link href="/blog">블로그 둘러보기</Link>
+          </Button>
+        </div>
+      </PageLayout>
+    );
+  }
 }

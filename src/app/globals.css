@@ -2,6 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paperlogy 폰트 정의 */
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-1Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-2ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-3Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-4Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-5Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-6SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-7Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-8ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('https://pcbdobocfcxhwpgfgydh.supabase.co/storage/v1/object/public/pont//Paperlogy-9Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -10,19 +83,22 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    
+    /* 네이버 스타일 초록색 테마 */
+    --primary: 151 100% 40%; /* 네이버 초록색 #03C75A */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 14% 96%; /* 연한 초록 배경 */
+    --secondary-foreground: 151 100% 30%;
+    --muted: 151 10% 96.1%;
+    --muted-foreground: 151 5% 45.1%;
+    --accent: 151 100% 32%; /* 진한 네이버 초록색 */
+    --accent-foreground: 0 0% 98%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 151 10% 89.8%;
+    --input: 151 10% 89.8%;
+    --ring: 151 100% 40%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -38,19 +114,22 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    
+    /* 다크 모드의 네이버 스타일 테마 */
+    --primary: 151 100% 35%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 150 7% 17%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --accent: 151 100% 30%;
     --accent-foreground: 0 0% 98%;
+    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --ring: 151 100% 35%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -64,6 +143,42 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-paperlogy;
+  }
+  h1 {
+    @apply text-3xl md:text-4xl font-extrabold tracking-tight;
+  }
+  h2 {
+    @apply text-2xl md:text-3xl font-bold tracking-tight;
+  }
+  h3 {
+    @apply text-xl md:text-2xl font-semibold;
+  }
+  p {
+    @apply leading-7 font-light;
+  }
+  strong, b {
+    @apply font-semibold;
+  }
+  button, .button {
+    @apply font-medium;
+  }
+}
+
+@layer components {
+  .container {
+    @apply px-4 mx-auto max-w-7xl sm:px-6 lg:px-8;
+  }
+  
+  .prose {
+    @apply max-w-none;
+  }
+  
+  .prose img {
+    @apply mx-auto rounded-lg shadow-md;
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
 }
