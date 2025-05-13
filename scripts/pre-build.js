@@ -13,7 +13,7 @@ const componentsDir = path.join(__dirname, '..', 'src', 'components');
 const articleCardPath = path.join(componentsDir, 'ArticleCard.tsx');
 const blogArticleCardPath = path.join(componentsDir, 'BlogArticleCard.tsx');
 
-// ArticleCard 컴포넌트 내용
+// 컴포넌트 내용 정의
 const fixedArticleCardContent = `"use client";
 
 import { BlogArticleCard } from "./BlogArticleCard";
@@ -22,18 +22,7 @@ import { BlogArticleCard } from "./BlogArticleCard";
 export const ArticleCard = BlogArticleCard;
 `;
 
-// components 디렉토리 존재 확인 및 생성
-if (!fs.existsSync(componentsDir)) {
-  console.log('components 디렉토리 생성 중...');
-  fs.mkdirSync(componentsDir, { recursive: true });
-}
-
-// BlogArticleCard.tsx 파일 확인 (이 파일이 반드시 있어야 함)
-if (!fs.existsSync(blogArticleCardPath)) {
-  console.error('오류: BlogArticleCard.tsx 파일이 존재하지 않습니다!');
-  
-  // BlogArticleCard.tsx 내용
-  const blogArticleCardContent = `"use client";
+const blogArticleCardContent = `"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -108,12 +97,24 @@ export function BlogArticleCard({ article }: ArticleProps) {
   );
 }`;
 
-  // BlogArticleCard.tsx 파일 생성
-  fs.writeFileSync(blogArticleCardPath, blogArticleCardContent);
-  console.log('BlogArticleCard.tsx 파일을 새로 생성했습니다.');
+// components 디렉토리 존재 확인 및 생성
+if (!fs.existsSync(componentsDir)) {
+  console.log('components 디렉토리 생성 중...');
+  fs.mkdirSync(componentsDir, { recursive: true });
 }
 
-// ArticleCard.tsx 파일 처리 (항상 새로 생성)
+// BlogArticleCard.tsx 파일 확인 및 생성 (필요한 경우)
+if (!fs.existsSync(blogArticleCardPath)) {
+  console.log('BlogArticleCard.tsx 파일 생성 중...');
+  try {
+    fs.writeFileSync(blogArticleCardPath, blogArticleCardContent);
+    console.log('BlogArticleCard.tsx 파일을 새로 생성했습니다.');
+  } catch (error) {
+    console.error('BlogArticleCard.tsx 파일 생성 중 오류 발생:', error);
+  }
+}
+
+// ArticleCard.tsx 파일 생성/업데이트 (항상 새로 생성)
 try {
   console.log('ArticleCard.tsx 파일 생성/업데이트 중...');
   fs.writeFileSync(articleCardPath, fixedArticleCardContent);
