@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import ClientBlogPage from "@/features/blog/components/ClientBlogPage";
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  return <ClientBlogPage />;
+  return (
+    <Suspense fallback={<div>페이지 로딩 중...</div>}>
+      <ClientBlogPage />
+    </Suspense>
+  );
 } 
