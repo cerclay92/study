@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "node scripts/pre-build.js && next build --no-lint --no-types-check",
+    "build": "node scripts/pre-build.js && next build --no-lint",
     "start": "next start",
     "lint": "next lint"
   },
