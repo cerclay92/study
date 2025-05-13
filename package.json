@@ -15,7 +15,9 @@
     "next": "14.0.3"
   },
   "resolutions": {
-    "next": "14.0.3"
+    "next": "14.0.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "dependencies": {
     "@hookform/resolvers": "4.1.3",

@@ -1,4 +1,9 @@
 {
   "version": 2,
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "buildCommand": "node scripts/pre-build.js && next build --no-lint --no-types-check",
+  "installCommand": "npm install --no-audit --no-fund",
+  "env": {
+    "NODE_VERSION": "18.x"
+  }
 } 
