@@ -17,7 +17,9 @@ interface CategoryPageProps {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { slug } = params;
+  // Next.js 15에서는 params를 awaitable 객체로 처리해야 합니다.
+  const paramsObject = await params;
+  const slug = paramsObject.slug;
   
   // 상수에서 먼저 카테고리 확인
   const localCategory = CATEGORIES.find(cat => cat.slug === slug);
@@ -50,7 +52,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = params;
+  // Next.js 15에서는 params를 awaitable 객체로 처리해야 합니다.
+  const paramsObject = await params;
+  const slug = paramsObject.slug;
   
   try {
     const supabase = createServerClient();

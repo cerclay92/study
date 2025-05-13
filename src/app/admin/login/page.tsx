@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { BookOpen } from "lucide-react";
 import { SERVICE_NAME } from "@/constants/theme";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/use-toast";
 import Link from "next/link";
 
 export default function AdminLoginPage() {
@@ -28,17 +27,12 @@ export default function AdminLoginPage() {
     // 실제 구현에서는 이 부분을 API 응답에 따라 처리
     setTimeout(() => {
       if (email === "admin@example.com" && password === "password") {
-        toast({
-          title: "로그인 성공",
-          description: "관리자 대시보드로 이동합니다.",
-        });
+        // 알림 대신 console.log 사용
+        console.log("로그인 성공");
         router.push("/admin");
       } else {
-        toast({
-          title: "로그인 실패",
-          description: "이메일 또는 비밀번호가 올바르지 않습니다.",
-          variant: "destructive",
-        });
+        // 알림 대신 console.error 사용
+        console.error("로그인 실패");
         setIsLoading(false);
       }
     }, 1000);

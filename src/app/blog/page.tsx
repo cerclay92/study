@@ -1,24 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import PageLayout from "@/components/PageLayout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { ArticleCard } from "@/components/ArticleCard";
+import { BlogArticleCard } from "@/components/BlogArticleCard";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CATEGORIES } from "@/constants/theme";
-
-export const metadata: Metadata = {
-  title: "블로그 - 서재, 사람을 잇다",
-  description: "서재, 사람을 잇다의 블로그 페이지입니다.",
-};
 
 // 서버 액션 타입
 type Category = {
@@ -48,7 +42,8 @@ async function fetchData(categoryId?: string, search?: string) {
   return data;
 }
 
-export default function BlogPage() {
+// 클라이언트 검색, 필터링 컴포넌트 - Suspense 내부에서 useSearchParams 사용
+function ClientBlogFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("category") || "all";
@@ -90,69 +85,77 @@ export default function BlogPage() {
   };
 
   return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="w-full sm:w-48">
+          <form>
+            <Select
+              name="category"
+              value={categoryId}
+              onValueChange={(value) => {
+                const url = new URL(window.location.href);
+                if (value === "all") {
+                  url.searchParams.delete("category");
+                } else {
+                  url.searchParams.set("category", value);
+                }
+                router.push(url.toString());
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="카테고리 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체</SelectItem>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </form>
+        </div>
+        
+        <form className="flex gap-2" onSubmit={handleSearch}>
+          <Input
+            name="search"
+            placeholder="검색어를 입력하세요"
+            defaultValue={searchQuery}
+          />
+          <Button type="submit">
+            <Search className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
+
+      {isLoading ? (
+        <div>로딩 중...</div>
+      ) : articles.length > 0 ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {articles.map((article) => (
+            <BlogArticleCard
+              key={article.id}
+              article={article}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-muted-foreground">
+          게시글이 없습니다
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function BlogPage() {
+  return (
     <PageLayout>
       <div className="container py-8">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div className="w-full sm:w-48">
-              <form>
-                <Select
-                  name="category"
-                  value={categoryId}
-                  onValueChange={(value) => {
-                    const url = new URL(window.location.href);
-                    if (value === "all") {
-                      url.searchParams.delete("category");
-                    } else {
-                      url.searchParams.set("category", value);
-                    }
-                    router.push(url.toString());
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="카테고리 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">전체</SelectItem>
-                    {categories?.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </form>
-            </div>
-            
-            <form className="flex gap-2" onSubmit={handleSearch}>
-              <Input
-                name="search"
-                placeholder="검색어를 입력하세요"
-                defaultValue={searchQuery}
-              />
-              <Button type="submit">
-                <Search className="h-4 w-4" />
-              </Button>
-            </form>
-          </div>
-
-          {isLoading ? (
-            <div>로딩 중...</div>
-          ) : articles.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {articles.map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              게시글이 없습니다
-            </div>
-          )}
-        </div>
+        <Suspense fallback={<div>페이지 로딩 중...</div>}>
+          <ClientBlogFilters />
+        </Suspense>
       </div>
     </PageLayout>
   );

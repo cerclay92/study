@@ -1,115 +1,168 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { BookOpen } from "lucide-react";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { SERVICE_NAME } from "@/constants/theme";
 
-export default function LoginPage() {
+// Next.js 15에서는 useSearchParams()가 Suspense 경계 내부에서 사용되어야 함
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [id, setId] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [callbackUrl, setCallbackUrl] = useState('/');
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const error = searchParams.get("error");
 
-  // 콜백 URL 추출
-  useEffect(() => {
-    const callback = searchParams.get('callbackUrl');
-    if (callback) {
-      setCallbackUrl(callback);
-    }
-  }, [searchParams]);
+  // 로그인 폼 스키마
+  const formSchema = z.object({
+    email: z.string().email({
+      message: "유효한 이메일을 입력해주세요.",
+    }),
+    password: z.string().min(8, {
+      message: "비밀번호는 8자 이상이어야 합니다.",
+    }),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  // 폼 상태 관리
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 폼 제출 처리
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         redirect: false,
-        id,
-        password,
+        email: values.email,
+        password: values.password,
+        callbackUrl,
       });
 
-      if (result?.error) {
-        setError('아이디 또는 비밀번호가 올바르지 않습니다.');
-      } else {
+      if (!result?.error) {
         router.push(callbackUrl);
         router.refresh();
+      } else {
+        console.error("로그인 실패:", result.error);
+        form.setError("root", {
+          message: "이메일 또는 비밀번호가 올바르지 않습니다.",
+        });
       }
     } catch (error) {
-      setError('로그인 중 오류가 발생했습니다.');
-      console.error(error);
+      console.error("로그인 중 오류 발생:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            아이디/비밀번호로 로그인
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            테스트 계정: admin / admin1234
-          </p>
-        </div>
-        
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-700">{error}</div>
-          </div>
-        )}
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="-space-y-px rounded-md shadow-sm">
-            <div>
-              <label htmlFor="id" className="sr-only">
-                아이디
-              </label>
-              <input
-                id="id"
-                name="id"
-                type="text"
-                required
-                className="relative block w-full rounded-t-md border-0 py-1.5 px-3 bg-white text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="아이디"
-                value={id}
-                onChange={(e) => setId(e.target.value)}
-              />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-4">
+          {/* 에러 메시지 표시 */}
+          {(error || form.formState.errors.root) && (
+            <div className="bg-destructive/15 text-destructive text-center py-2 px-3 rounded-md text-sm">
+              {error === "CredentialsSignin"
+                ? "이메일 또는 비밀번호가 올바르지 않습니다."
+                : form.formState.errors.root?.message || "로그인 중 오류가 발생했습니다."}
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                비밀번호
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="relative block w-full rounded-b-md border-0 py-1.5 px-3 bg-white text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="비밀번호"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
+          )}
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-indigo-400"
-            >
-              {loading ? '로그인 중...' : '로그인'}
-            </button>
+          {/* 이메일 필드 */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>이메일</FormLabel>
+                <FormControl>
+                  <Input placeholder="your@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* 비밀번호 필드 */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>비밀번호</FormLabel>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    비밀번호 찾기
+                  </Link>
+                </div>
+                <FormControl>
+                  <Input type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "로그인 중..." : "로그인"}
+        </Button>
+
+        <div className="mt-4 text-center text-sm">
+          계정이 없으신가요?{" "}
+          <Link href="/auth/register" className="text-primary hover:underline">
+            회원가입
+          </Link>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-secondary/10 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <Link href="/" className="flex items-center gap-2 text-primary font-bold">
+              <BookOpen className="w-6 h-6" />
+              <span>{SERVICE_NAME}</span>
+            </Link>
           </div>
-        </form>
-      </div>
+          <CardTitle className="text-2xl">이메일로 로그인</CardTitle>
+          <CardDescription>
+            이메일과 비밀번호를 입력하여 로그인하세요.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Suspense fallback={<div>로딩 중...</div>}>
+            <LoginForm />
+          </Suspense>
+        </CardContent>
+        <CardFooter className="flex justify-center border-t pt-6">
+          <Button variant="outline" className="w-full" asChild>
+            <Link href="/">홈으로 돌아가기</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

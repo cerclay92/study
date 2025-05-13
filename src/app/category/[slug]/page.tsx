@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Grid, LayoutList } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { use } from "react";
 
 // 임시 게시글 데이터 (나중에 Supabase로 대체)
 const CATEGORY_POSTS = {
@@ -97,9 +96,8 @@ interface PageProps {
 }
 
 export default function CategoryPage({ params }: PageProps) {
-  // React.use()로 params 언래핑
-  const unwrappedParams = use(params);
-  const { slug } = unwrappedParams;
+  // Next.js 14.0.3 버전에서는 params가 Promise가 아니므로 use() 함수로 unwrap할 필요가 없습니다.
+  const { slug } = params;
   
   // 카테고리 정보 찾기
   const category = CATEGORIES.find((cat) => cat.slug === slug);
