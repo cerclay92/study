@@ -11,15 +11,14 @@ import PageLayout from "@/components/PageLayout";
 import { CATEGORIES } from "@/constants/theme";
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   // Next.js 15에서는 params를 awaitable 객체로 처리해야 합니다.
-  const paramsObject = await params;
-  const slug = paramsObject.slug;
+  const { slug } = await params;
   
   // 상수에서 먼저 카테고리 확인
   const localCategory = CATEGORIES.find(cat => cat.slug === slug);
@@ -31,7 +30,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
   
   // 상수에 없다면 DB에서 조회
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   const { data: category } = await supabase
     .from("categories")
     .select("name")
@@ -53,77 +52,34 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   // Next.js 15에서는 params를 awaitable 객체로 처리해야 합니다.
-  const paramsObject = await params;
-  const slug = paramsObject.slug;
+  const { slug } = await params;
   
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
-    // 로컬 상수에서 카테고리 정보 확인
-    const localCategory = CATEGORIES.find(cat => cat.slug === slug);
-    let categoryId: number | null = null;
-    let categoryName: string | null = null;
-    
-    if (localCategory) {
-      categoryId = localCategory.id;
-      categoryName = localCategory.name;
-    } else {
-      try {
-        // 상수에 없다면 DB에서 조회
-        const { data: categories, error: categoryError } = await supabase
-          .from("categories")
-          .select("*");
-        
-        if (categoryError) {
-          console.error("카테고리 정보 조회 오류:", categoryError);
-          console.error("오류 세부정보:", JSON.stringify(categoryError));
-          notFound();
-        }
-        
-        // 카테고리 목록에서 slug와 일치하는 항목 찾기
-        const category = categories?.find(c => {
-          // 카테고리 테이블에 slug 필드가 없을 수 있으므로 
-          // 이름을 소문자로 변환하여 비교
-          return c.name?.toLowerCase() === slug.toLowerCase();
-        });
-        
-        if (!category) {
-          console.error(`카테고리를 찾을 수 없음: ${slug}`);
-          notFound();
-        }
-        
-        categoryId = category.id;
-        categoryName = category.name;
-      } catch (error) {
-        console.error("카테고리 정보 조회 중 예외 발생:", error);
-        notFound();
-      }
+    // 카테고리 정보 가져오기
+    const { data: category, error: categoryError } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+    if (categoryError || !category) {
+      throw new Error("카테고리를 찾을 수 없습니다.");
     }
-    
-    // 카테고리에 해당하는 게시글 가져오기
-    let articles = [];
-    try {
-      const { data: articlesData, error: articlesError } = await supabase
-        .from("articles")
-        .select("*")
-        .eq("category_id", categoryId);
-      
-      if (articlesError) {
-        console.error("게시글 목록 조회 오류:", articlesError);
-        console.error("오류 세부정보:", JSON.stringify(articlesError));
-      } else {
-        articles = articlesData || [];
-        console.log("가져온 카테고리 게시글:", articles);
-      }
-      
-      // 디버깅용 로깅
-      console.log(`카테고리 ID: ${categoryId}, 이름: ${categoryName}, 슬러그: ${slug}`);
-      console.log("게시글 수:", articles?.length || 0);
-    } catch (error) {
-      console.error("게시글 목록 조회 중 예외 발생:", error);
-      articles = [];
+
+    // 해당 카테고리의 게시글 가져오기
+    const { data: articles, error: articlesError } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("category_id", category.id)
+      .eq("published", true)
+      .order("published_at", { ascending: false });
+
+    if (articlesError) {
+      throw articlesError;
     }
-    
+
     return (
       <PageLayout>
         <div className="container py-10">
@@ -135,9 +91,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               </Link>
             </Button>
             
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">{categoryName}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">{category.name}</h1>
             <p className="text-muted-foreground">
-              {`${categoryName} 카테고리의 게시글 목록입니다.`}
+              {`${category.name} 카테고리의 게시글 목록입니다.`}
             </p>
           </div>
           
@@ -187,7 +143,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </PageLayout>
     );
   } catch (error) {
-    console.error("카테고리 페이지 로딩 중 오류 발생:", error);
-    notFound();
+    console.error("Error fetching category data:", error);
+    throw error;
   }
 } 

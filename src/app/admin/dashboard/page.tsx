@@ -50,6 +50,14 @@ import {
   FileEdit,
   Calendar,
   Tag,
+  PencilLine,
+  MoreHorizontal,
+  Trash2,
+  Search,
+  Clock,
+  Plus,
+  Upload,
+  Filter,
 } from "lucide-react";
 import { ArticleWithCategory } from "@/features/blog/api";
 

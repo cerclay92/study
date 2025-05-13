@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ReactElement } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Copy } from 'lucide-react';
@@ -10,13 +10,17 @@ import axios from 'axios';
 const PACKAGE_NAME = '@easynext/cli';
 const CURRENT_VERSION = 'v0.1.35';
 
+interface ClientHomeProps {
+  categoryIcons: Record<string, ReactElement>;
+}
+
 function latestVersion(packageName: string) {
   return axios
     .get('https://registry.npmjs.org/' + packageName + '/latest')
     .then((res) => res.data.version);
 }
 
-export default function ClientHome() {
+export default function ClientHome({ categoryIcons }: ClientHomeProps) {
   const { toast } = useToast();
   const [latest, setLatest] = useState<string | null>(null);
 

@@ -4,17 +4,24 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+interface PageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
 export default function ArticleEditRedirectPage({
   params,
-}: {
-  params: { id: string };
-}) {
+}: PageProps) {
   const router = useRouter();
-  const { id } = params;
 
   useEffect(() => {
-    router.replace(`/admin/blog/edit/${id}`);
-  }, [router, id]);
+    const redirect = async () => {
+      const { id } = await params;
+      router.replace(`/admin/blog/edit/${id}`);
+    };
+    redirect();
+  }, [router, params]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">

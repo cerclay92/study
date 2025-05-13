@@ -90,14 +90,13 @@ const CATEGORY_POSTS = {
 };
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default function CategoryPage({ params }: PageProps) {
-  // Next.js 14.0.3 버전에서는 params가 Promise가 아니므로 use() 함수로 unwrap할 필요가 없습니다.
-  const { slug } = params;
+export default async function CategoryPage({ params }: PageProps) {
+  const { slug } = await params;
   
   // 카테고리 정보 찾기
   const category = CATEGORIES.find((cat) => cat.slug === slug);
@@ -243,9 +242,7 @@ export default function CategoryPage({ params }: PageProps) {
           <div className="relative z-10">
             <h3 className="text-2xl font-bold mb-4">더 많은 콘텐츠를 원하시나요?</h3>
             <p className="mb-6 text-lg max-w-2xl mx-auto">월 1,000원으로 모든 프리미엄 콘텐츠를 즐기실 수 있습니다.</p>
-            <Button asChild size="lg" className="rounded-full px-8 py-6 text-base shadow-lg hover:shadow-xl transition-all">
-              <Link href="/subscribe">지금 구독하기</Link>
-            </Button>
+            <Button size="lg">지금 구독하기</Button>
           </div>
         </div>
       </div>
