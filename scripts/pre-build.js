@@ -3,75 +3,121 @@ const path = require('path');
 
 // 환경 정보 출력
 console.log('==========================================');
+console.log('배포 환경 정보:');
 console.log('Node.js 버전:', process.version);
 console.log('플랫폼:', process.platform);
-console.log('현재 작업 디렉토리:', process.cwd());
 console.log('==========================================');
 
 // 경로 정의
-const articleCardPath = path.join(__dirname, '..', 'src', 'components', 'ArticleCard.tsx');
+const componentsDir = path.join(__dirname, '..', 'src', 'components');
+const articleCardPath = path.join(componentsDir, 'ArticleCard.tsx');
+const blogArticleCardPath = path.join(componentsDir, 'BlogArticleCard.tsx');
+
+// ArticleCard 컴포넌트 내용
 const fixedArticleCardContent = `"use client";
 
 import { BlogArticleCard } from "./BlogArticleCard";
 
-// 새로운 컴포넌트로 마이그레이션
-// 이전 버전과의 호환성을 위해 새 컴포넌트로 리다이렉트
+// 새 컴포넌트로 마이그레이션하여 호환성 유지
 export const ArticleCard = BlogArticleCard;
 `;
 
-console.log('빌드 전 파일 정리 시작...');
-console.log('ArticleCard 파일 경로:', articleCardPath);
+// components 디렉토리 존재 확인 및 생성
+if (!fs.existsSync(componentsDir)) {
+  console.log('components 디렉토리 생성 중...');
+  fs.mkdirSync(componentsDir, { recursive: true });
+}
 
-// ArticleCard.tsx 파일 처리
+// BlogArticleCard.tsx 파일 확인 (이 파일이 반드시 있어야 함)
+if (!fs.existsSync(blogArticleCardPath)) {
+  console.error('오류: BlogArticleCard.tsx 파일이 존재하지 않습니다!');
+  
+  // BlogArticleCard.tsx 내용
+  const blogArticleCardContent = `"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { CalendarIcon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from "date-fns";
+
+type ArticleProps = {
+  article: {
+    id: string;
+    title: string;
+    content: string;
+    featured_image: string | null;
+    created_at: string;
+    category: {
+      id: string;
+      name: string;
+    };
+    author: {
+      name: string;
+    };
+  };
+};
+
+export function BlogArticleCard({ article }: ArticleProps) {
+  return (
+    <Link href={\`/blog/\${article.id}\`} passHref>
+      <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="relative w-full h-48 overflow-hidden">
+          {article.featured_image ? (
+            <Image
+              src={article.featured_image}
+              alt={article.title}
+              className="object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          ) : (
+            <Image
+              src="https://picsum.photos/800/600"
+              alt="기본 이미지"
+              className="object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          )}
+        </div>
+        <CardHeader>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs">
+              {article.category?.name || "미분류"}
+            </span>
+            <div className="flex items-center gap-1">
+              <CalendarIcon className="h-3 w-3" />
+              <span>{format(new Date(article.created_at), "yyyy.MM.dd")}</span>
+            </div>
+          </div>
+          <CardTitle className="line-clamp-2">{article.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription className="line-clamp-3">
+            {article.content.replace(/<[^>]*>/g, "")}
+          </CardDescription>
+        </CardContent>
+        <CardFooter>
+          <p className="text-sm text-muted-foreground">
+            {article.author?.name || "익명"}
+          </p>
+        </CardFooter>
+      </Card>
+    </Link>
+  );
+}`;
+
+  // BlogArticleCard.tsx 파일 생성
+  fs.writeFileSync(blogArticleCardPath, blogArticleCardContent);
+  console.log('BlogArticleCard.tsx 파일을 새로 생성했습니다.');
+}
+
+// ArticleCard.tsx 파일 처리 (항상 새로 생성)
 try {
-  // 파일이 있는 경우 내용 확인
-  if (fs.existsSync(articleCardPath)) {
-    console.log('ArticleCard.tsx 파일이 존재합니다.');
-    const content = fs.readFileSync(articleCardPath, 'utf8');
-    console.log('ArticleCard.tsx 파일 크기:', content.length, '바이트');
-    
-    // 파일 내용 앞부분 출력 (디버깅용)
-    console.log('파일 내용 일부:', content.substring(0, 100).replace(/\n/g, '\\n'));
-    
-    // 병합 충돌 마커가 있는지 확인
-    if (content.includes('<<<<<<< HEAD') || content.includes('=======') || content.includes('>>>>>>>')) {
-      console.log('ArticleCard.tsx 파일에서 병합 충돌 마커 발견. 파일 재생성 중...');
-      fs.writeFileSync(articleCardPath, fixedArticleCardContent);
-      console.log('ArticleCard.tsx 파일 재생성 완료.');
-      
-      // 제대로 적용되었는지 확인
-      const newContent = fs.readFileSync(articleCardPath, 'utf8');
-      console.log('새 파일 내용 일부:', newContent.substring(0, 100).replace(/\n/g, '\\n'));
-    } else {
-      console.log('ArticleCard.tsx 파일은 정상적입니다.');
-    }
-  } else {
-    console.log('ArticleCard.tsx 파일이 없습니다. 새로 생성합니다.');
-    // 디렉토리가 없을 경우 생성
-    const dir = path.dirname(articleCardPath);
-    if (!fs.existsSync(dir)) {
-      console.log('components 디렉토리가 없습니다. 생성 중...');
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(articleCardPath, fixedArticleCardContent);
-    console.log('ArticleCard.tsx 파일 생성 완료.');
-    
-    // 제대로 생성되었는지 확인
-    if (fs.existsSync(articleCardPath)) {
-      console.log('ArticleCard.tsx 파일이 성공적으로 생성되었습니다.');
-    } else {
-      console.log('오류: ArticleCard.tsx 파일 생성 후 존재하지 않습니다.');
-    }
-  }
-  
-  // BlogArticleCard.tsx 파일 존재 확인
-  const blogArticleCardPath = path.join(__dirname, '..', 'src', 'components', 'BlogArticleCard.tsx');
-  if (fs.existsSync(blogArticleCardPath)) {
-    console.log('BlogArticleCard.tsx 파일이 존재합니다.');
-  } else {
-    console.error('오류: BlogArticleCard.tsx 파일이 존재하지 않습니다!');
-  }
-  
+  console.log('ArticleCard.tsx 파일 생성/업데이트 중...');
+  fs.writeFileSync(articleCardPath, fixedArticleCardContent);
+  console.log('ArticleCard.tsx 파일 처리 완료!');
 } catch (error) {
   console.error('ArticleCard.tsx 파일 처리 중 오류 발생:', error);
   process.exit(1);
