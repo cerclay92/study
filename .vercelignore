@@ -1,2 +1,10 @@
 # Ignore Conflict Files
-src/components/ArticleCard.tsx 
+src/components/ArticleCard.tsx
+
+# Vercel Specific Files
+.git
+.gitignore
+.github
+README.md
+.next
+node_modules 
