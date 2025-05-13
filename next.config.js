@@ -27,8 +27,6 @@ const nextConfig = {
   poweredByHeader: false,
   // 빌드 오류 방지를 위한 추가 설정
   experimental: {
-    // 중복 라우트 무시
-    allowDynamicGlobImports: true,
     // API 라우트 처리 개선
     serverComponentsExternalPackages: ["@supabase/ssr"]
   }
