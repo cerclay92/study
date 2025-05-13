@@ -8,10 +8,14 @@ const BACKUP_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export async function createServerClient() {
   const cookieStore = await cookies();
+  
+  // 환경 변수 확인 및 백업 값 사용
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || BACKUP_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || BACKUP_SUPABASE_ANON_KEY;
 
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -37,4 +41,4 @@ export async function createServerClient() {
   );
 }
 
-export { createClient }; 
+export { createClient };

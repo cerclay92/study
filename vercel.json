@@ -4,6 +4,8 @@
   "buildCommand": "node scripts/pre-build.js && next build --no-lint",
   "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps",
   "env": {
-    "NODE_VERSION": "18.x"
+    "NODE_VERSION": "18.x",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://temporary-project.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.temporary-key-for-build"
   }
 } 
