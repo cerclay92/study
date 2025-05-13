@@ -45,44 +45,77 @@ function createApiRouteStubs() {
   });
   
   // 라우트 핸들러 파일 생성
-  const articleRouteContent = `
-// 임시 라우트 핸들러 (빌드만을 위한 용도)
+  const routeContent = `
+// 빌드 오류 방지용 임시 라우트 핸들러
 export async function GET() {
-  return Response.json({ message: 'This is a build-time stub' });
+  return Response.json({ message: 'Temporary route for build process' });
 }
 
 export async function POST() {
-  return Response.json({ message: 'This is a build-time stub' });
+  return Response.json({ message: 'Temporary route for build process' });
 }
 `;
 
-  const articlesRouteContent = `
-// 임시 라우트 핸들러 (빌드만을 위한 용도)
-export async function GET() {
-  return Response.json([]);
-}
-`;
-
-  // 라우트 파일 생성
-  const articleRouteFile = path.join(articleDir, 'route.js');
-  const articlesRouteFile = path.join(articlesDir, 'route.js');
-  
-  // 기존 파일을 백업하고 스텁 파일 생성
-  [
-    { path: articleRouteFile, content: articleRouteContent },
-    { path: articlesRouteFile, content: articlesRouteContent }
-  ].forEach(({ path: filePath, content }) => {
-    // 파일이 존재하면 .bak 파일로 백업
-    if (fs.existsSync(filePath)) {
-      const backupPath = `${filePath}.bak`;
-      fs.renameSync(filePath, backupPath);
-      console.log(`${filePath} 파일 백업 완료: ${backupPath}`);
+  // 중복 라우트 파일 제거 및 생성
+  function createOrUpdateRouteFile(dirPath, routeName, content) {
+    // pages 디렉토리의 동일한 라우트가 있는지 확인
+    const pagesApiDir = path.join(__dirname, '..', 'pages', 'api');
+    const pagePath = path.join(pagesApiDir, routeName);
+    
+    if (fs.existsSync(pagesApiDir)) {
+      // pages/api 아래의 동일한 파일을 검색하여 삭제
+      const matchFiles = [
+        path.join(pagesApiDir, routeName, 'route.js'),
+        path.join(pagesApiDir, routeName, 'route.ts'),
+        path.join(pagesApiDir, `${routeName}.js`),
+        path.join(pagesApiDir, `${routeName}.ts`)
+      ];
+      
+      matchFiles.forEach(file => {
+        if (fs.existsSync(file)) {
+          try {
+            // 백업 파일 생성
+            const backupFile = `${file}.build-bak`;
+            fs.renameSync(file, backupFile);
+            console.log(`기존 pages API 파일 백업: ${file} -> ${backupFile}`);
+          } catch (err) {
+            console.error(`페이지 API 파일 처리 중 오류: ${file}`, err);
+          }
+        }
+      });
     }
     
-    // 스텁 파일 생성
-    fs.writeFileSync(filePath, content);
-    console.log(`${filePath} 스텁 파일 생성 완료`);
-  });
+    // app 라우터의 기존 파일 확인 및 처리
+    const appRouteFiles = [
+      path.join(dirPath, 'route.js'),
+      path.join(dirPath, 'route.ts')
+    ];
+    
+    // 모든 기존 route 파일 삭제
+    appRouteFiles.forEach(file => {
+      if (fs.existsSync(file)) {
+        try {
+          fs.unlinkSync(file);
+          console.log(`기존 route 파일 삭제: ${file}`);
+        } catch (err) {
+          console.error(`route 파일 삭제 오류: ${file}`, err);
+        }
+      }
+    });
+    
+    // 새 route.js 파일 생성
+    const targetFile = path.join(dirPath, 'route.js');
+    try {
+      fs.writeFileSync(targetFile, content);
+      console.log(`route 파일 생성 완료: ${targetFile}`);
+    } catch (err) {
+      console.error(`route 파일 생성 오류: ${targetFile}`, err);
+    }
+  }
+  
+  // 블로그 API 라우트 생성
+  createOrUpdateRouteFile(articleDir, 'blog/article', routeContent);
+  createOrUpdateRouteFile(articlesDir, 'blog/articles', routeContent);
 }
 
 // ArticleCard.tsx 파일 내용
@@ -273,7 +306,7 @@ try {
 // Supabase 마이그레이션 처리 실행
 handleSupabaseMigrations();
 
-// API 라우트 스텁 생성
+// API 라우트 스텁 생성 - 중복 감지 문제 해결
 createApiRouteStubs();
 
 console.log('빌드 전 처리 완료'); 

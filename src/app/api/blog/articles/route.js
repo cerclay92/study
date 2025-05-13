@@ -1,5 +1,9 @@
 
-// 임시 라우트 핸들러 (빌드만을 위한 용도)
+// 빌드 오류 방지용 임시 라우트 핸들러
 export async function GET() {
-  return Response.json([]);
+  return Response.json({ message: 'Temporary route for build process' });
+}
+
+export async function POST() {
+  return Response.json({ message: 'Temporary route for build process' });
 }

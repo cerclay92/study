@@ -5,7 +5,7 @@
   "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps",
   "env": {
     "NODE_VERSION": "18.x",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://temporary-project.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.temporary-key-for-build"
+    "NEXT_PUBLIC_SUPABASE_URL": "https://fntiuopyonutxkeeipsc.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZudGl1b3B5b251dHhrZWVpcHNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTE1NTgsImV4cCI6MjA2MjU4NzU1OH0.J_gFu3MByiStp6IO7EmT4Lplp-_QYY0lLkX8h3L6S5o"
   }
 } 
